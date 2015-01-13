@@ -47,9 +47,9 @@ ClassMethod ProcessResponse(request as EnsLib.HTTP.GenericMessage,
 		set alertResponse.TimeStamp = $ZDT($system.Util.LocalWithZTIMEZONEtoUTC($H),3) //$znow	//$ZTS
 		set alertResponse.Response = array("value")
 		set emailId = array("originalAlertID")
-		set email = ##class(exp.ClinicalAlerts.OmissionEmailRequest).%OpenId(emailId)
+		set email = ##class(exp.ClinicalAlerts.EmailRequest).%OpenId(emailId)
 		if ( '$isobject(email) ) {
-			throw ##class(%Exception.GeneralException).%New("Unable to find alert email with id = " _ emailId)
+			throw ##class(%Exception.General).%New("Unable to find alert email with id = " _ emailId)
 		} 
 		set alertResponse.OriginalEmailRequestID = email.%Id()
 		set sentTo = $listbuild()

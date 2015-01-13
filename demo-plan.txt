@@ -1,0 +1,51 @@
+Express Scripts
+---------------
+
+Flow 1 - Clinical Data Alerts
+
+	HL7 Input -> Pull Relevant Clinical Data -> Run Rule -> Send Alert
+
+Rule - Diabetes Alert - checks if 100 < LDL Level <= 150
+						          is diabetic
+								  NOT on Statin
+
+Package: exp.Samples.ClinicalAlerts
+1. Need a bunch of HL7, generated for 2-3 different patients with ~100 different LDL levels.
+2. %Persistent class - exp.Samples.ClinicalAlerts.Patient 	
+	> refactor the MedsMonitor.PatientModel.Patient stuff for this
+3. Simple transform to pull out patient, clinician and LDL level rule data
+. Transform 
+
+How do we know patients are diabetic - we process a real-time hl7 PPR_PC1 2.5:PRB Problem Details HL7 feed - so we need to generate these messages too.
+	> also real-time ADT feed to pull diagnosis - > populates "Conditions"
+
+Production - 
+	> Inbound HTTP HL7 adapter
+	> Message Router - send PPR problem message off to store
+					 - send ORU message off to run diabetes rule
+	> Business Process
+		1. Transform HL7 to DiabetesInfo
+		2. Evaluate Rule
+			> ?Custom function in Rule - "IsDiabetic"?
+			> or poperty on message class? 
+				I like the RULE better since it then decouples the logical
+				rule from the implementation - the rule user just knows the type
+				(PatientModel) and the "condition"
+		3. If "Glucose Alert Increase"
+		4. Transform to Email - send alert to clinicial
+		
+
+Flow 2 - ESI "omission of therapy" alert
+
+Production -
+	> Inbound HTTP adapter take PDF
+	> Business Process
+		1. Extract TEXT from PDF
+		2. Rule to extract the clinician info
+		3. Attempt to extract info to build CDA document
+		4. Send CDA to HealthShare
+		5. Transform into Email 
+			> Email has ability to respond to confirm/reject alert
+			> Record response in HealthShare
+	> Data cube to view responses
+

@@ -2,26 +2,43 @@ class exp.ClinicalAlerts.EmailRequest extends Ens.Request
 {
 Property Email as %Net.MailMessage;
 
+Property To as %ListOfDataTypes;
+
 ClassMethod DrugDiseaseEmail(sda as HS.SDA3.Container) as exp.ClinicalAlerts.EmailRequest
 {
 	return ..CreateFromSDA(sda,"DrugDiseaseFax")
 }
+
 ClassMethod OmissionEmail(sda as HS.SDA3.Container) as exp.ClinicalAlerts.EmailRequest
 {
-
 	return ..CreateFromSDA(sda,"OmissionOfTherapy")
 }
 
+ClassMethod OmissionText(sda as HS.SDA3.Container) as exp.ClinicalAlerts.EmailRequest
+{
 
+	set request = ..CreateFromSDA(sda,"OmissionText")
+	set request.To = ##class(%ListOfDataTypes).%New()
+	do request.To.Insert("5403595137@vtext.com")	
+	set request.Email.To = ##class(%ListOfDataTypes).%New()
+	do request.Email.To.Insert("5403595137@vtext.com")	
+	return request
+}
 ClassMethod CreateFromSDA(sda as HS.SDA3.Container,type As %String) as exp.ClinicalAlerts.EmailRequest
 {
 	set email = ##class(%Net.MailMessage).%New()
 	do email.To.Insert("jmimick@intersystems.com")	
+	if ( $data(^sendToJudi) ) {
+		for i=1:1:$listlength(^sendToJudi) {
+			do email.To.Insert( $list(^sendToJudi,i))
+		}
+	}
 	//do email.To.Insert("jmimick@gmail.com")	
 	set email.Subject =type_ " Alert!"
 	set email.From = "ESIClinicialAlerts@esi.com"
 	set email.ContentType = "text/html"
 
+	if (type'="OmissionText") { 
 	if ( sda.%Extends("HS.SDA3.Container") ) {
 
 		set pt = sda.Patient.Name.GivenName_"."_sda.Patient.Name.FamilyName_"."_sda.Patient.MPIID
@@ -37,6 +54,7 @@ ClassMethod CreateFromSDA(sda as HS.SDA3.Container,type As %String) as exp.Clini
 		set pt = pt _ "." _ sda.GetValueAt("Patient.Name.FamilyName")
 		set pt = pt _ "." _ sda.GetValueAt("Patient.MPIID")
 
+	}
 	}
 
 	// todo - load document for DrugDisease into email
@@ -59,8 +77,20 @@ ClassMethod CreateFromSDA(sda as HS.SDA3.Container,type As %String) as exp.Clini
 
 }
 
+ClassMethod OmissionTextBody(id) As %String
+{
+	set text="You have a new alert from ESI."
+	//set text=text_" <a href=""http://exchange.healthshare.us:9989/alerts/"_id_""">Click</a>"
+	//set text=text_" to view the details."
+	set text=text_" Please check your email inbox for details."
+	return text
+}
+
 ClassMethod BuildEmailBody(type As %String,id) as %String
 {
+	if ( type = "OmissionText" ) {
+		return ..OmissionTextBody(id)
+	}
 	set me=##class(%Dictionary.ClassDefinition).%OpenId(..%ClassName(1))
 	for i=1:1:me.XDatas.Count() {
 		set xdata = me.XDatas.GetAt(i)

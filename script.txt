@@ -1,0 +1,22 @@
+demonstration script 
+
+
+2 scenarios
+
+  (1) Electronically transmit omission of therapy letter's to clinicians and
+  capture response.
+
+  (2) Run clinical drug/disease rule on real-time HL7 data feed, send alert
+  document by email to clinical and caputre response digitally. 
+
+For (1):
+
+$cd /Users/jmimick/Downloads/Screen RX
+jmimickmba11:Screen RX jmimick$ curl -X POST \ 
+>--data-binary @OmissionOfTherpy.pdf \
+> http://_system:SYS@localhost:9995/Smith/John/123456
+
+For (2):
+$~csession pluto
+USER>zn "hl7demo"
+HL7DEMO>do ##class(HL7Demo.PeopleDataLoader).GenerateDrugAlertMessage()
